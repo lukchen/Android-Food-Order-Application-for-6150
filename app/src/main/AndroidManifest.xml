@@ -23,8 +23,10 @@
         <activity
             android:name=".Home"
             android:label="@string/title_activity_home"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/Theme.AppCompat.Light" />
         <activity android:name=".FoodList" />
+        <activity android:name=".FoodDetail" />
+        <activity android:name=".Cart"></activity>
     </application>
 
 </manifest>

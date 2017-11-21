@@ -47,7 +47,6 @@ public class Home extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("Menu");
-        setSupportActionBar(toolbar);
 
         //Init Firebase
         database = FirebaseDatabase.getInstance();
@@ -58,8 +57,9 @@ public class Home extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent cartIntent = new Intent(Home.this,Cart.class);
+                startActivity(cartIntent);
+
             }
         });
 
@@ -98,10 +98,10 @@ public class Home extends AppCompatActivity
                 viewHolder.setItemClickListener(new ItemClickListener() {
                     @Override
                     public void onClick(View view, int position, boolean isLongClick) {
-                        //Get CategoryID and sent to new Activity
+                        //Get CategoryId and send to new Activity
                         Intent foodList = new Intent(Home.this, FoodList.class);
-
-                        foodList.putExtra("CategoryID", adapter.getRef(position).getKey());
+                        //Because CategoryId is key, so we just get the key of this item
+                        foodList.putExtra("CategoryId", adapter.getRef(position).getKey());
                         startActivity(foodList);
                     }
                 });
