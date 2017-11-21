@@ -22,11 +22,14 @@ import android.widget.Toast;
 import com.androideatit.Common.Common;
 import com.androideatit.Interface.ItemClickListener;
 import com.androideatit.Model.Category;
+import com.androideatit.Model.Order;
 import com.androideatit.ViewHolder.MenuViewHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
+
+import java.util.zip.CRC32;
 
 public class Home extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -142,11 +145,17 @@ public class Home extends AppCompatActivity
         if (id == R.id.nav_menu) {
             return true;
         }else if(id == R.id.nav_cart){
+            Intent cartIntent = new Intent(Home.this, Cart.class);
+            startActivity(cartIntent);
 
         }else if(id == R.id.nav_orders){
+            Intent orderIntent = new Intent(Home.this, OrderStatus.class);
+            startActivity(orderIntent);
 
         }else if(id == R.id.nav_log_out){
-
+            Intent signIn = new Intent(Home.this, SignIn.class);
+            signIn.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(signIn);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
