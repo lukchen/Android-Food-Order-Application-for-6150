@@ -73,7 +73,7 @@ public class Cart extends AppCompatActivity {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(Cart.this);
         alertDialog.setTitle("One more step!");
         alertDialog.setMessage("Enter your address");
-
+        System.out.println("email address ");
         final EditText edtAddress = new EditText(Cart.this);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
