@@ -58,6 +58,7 @@ public class Database extends SQLiteAssetHelper {
                 order.getQuanlity(),
                 order.getPrice(),
                 order.getDiscount());
+
         db.execSQL(query);
     }
 

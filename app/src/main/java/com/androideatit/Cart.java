@@ -15,16 +15,53 @@ import android.widget.Toast;
 
 import com.androideatit.Common.Common;
 import com.androideatit.Database.Database;
+import com.androideatit.Model.Food;
 import com.androideatit.Model.Order;
 import com.androideatit.Model.Request;
 import com.androideatit.ViewHolder.CartAdapter;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static com.androideatit.Cart.inventory;
+import static com.androideatit.Cart.inventoryList;
+
+//this thread update the inventoryList from firebase
+class IventoryListThread implements Runnable
+{
+    DatabaseReference foods = FirebaseDatabase.getInstance().getReference("Foods");
+
+    public void run()
+    {
+        foods.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                inventoryList.clear();
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                    inventory = singleSnapshot.getValue(Food.class);
+                    inventoryList.add(inventory);
+                }
+                System.out.println(inventoryList.size());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+}
 
 public class Cart extends AppCompatActivity {
 
@@ -40,10 +77,24 @@ public class Cart extends AppCompatActivity {
     List<Order> cart = new ArrayList<>();
     CartAdapter adapter;
 
+    //name the inventorylistthread
+    Thread inventorylistthread = new Thread(new IventoryListThread());
+
+    //name the variables in static, so they can be accessed and updated by the inventorylistthread
+    static List<List<Order>> orderList = new ArrayList<>();
+    static List<Food> inventoryList = new ArrayList<>();
+    static Food inventory;
+
+    //The executor can makes inventorylistthread running in interval, which is 1 hour
+    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
+
+        //thread running in 1 hour interval
+        executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
 
         //Firebase
         database = FirebaseDatabase.getInstance();
@@ -58,15 +109,47 @@ public class Cart extends AppCompatActivity {
         txtTotalPrice = findViewById(R.id.total);
         btnPlace = findViewById(R.id.btnPlaceOrder);
 
+        //When the "Place Order" button clicked
         btnPlace.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                //Create new Request
-                showAlertDialog();
+           public void onClick(View v) {
+
+                //update invetoryList immediately first
+                executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
+                //Check if the order can only be partial
+                if(checkavailability(cart)) {
+
+                    //Create new Request
+                    showAlertDialog();
+
+                }else {
+
+                    //Show user the "Partial order or cancel order options" dialog
+                }
             }
         });
 
         loadListFood();
+    }
+
+    //Find out whether the foods in order contains unavailable food
+    private boolean checkavailability(List<Order> cart){
+        boolean partial = true;
+        for(Order order : cart){
+            for(Food food: inventoryList){
+                /*System.out.println("SH-----------IT"+food.getFoodId());
+                System.out.println("FU-----------CK"+order.getProductId());
+                System.out.println("DA-----------MN"+food.getAvailabilityFlag());*/
+                if(food.getFoodId().equals(order.getProductId())){
+                    if(food.getAvailabilityFlag().equals("0")){
+                        //if the availabilityFlag of this food is "0"
+                        System.out.println("FUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCK");
+                        partial = false;
+                    }
+                }
+            }
+        }
+        return partial;
     }
 
     private void showAlertDialog() {
@@ -119,6 +202,7 @@ public class Cart extends AppCompatActivity {
 
     private void loadListFood() {
         cart = new Database(this).getCarts();
+        orderList.add(cart);
         adapter = new CartAdapter(cart,this);
         recyclerView.setAdapter(adapter);
 

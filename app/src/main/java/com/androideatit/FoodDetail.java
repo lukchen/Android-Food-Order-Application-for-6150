@@ -52,6 +52,7 @@ public class FoodDetail extends AppCompatActivity {
         btnCart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 new Database(getBaseContext()).addToCart(new Order(
                         foodId,
                         currentFood.getName(),

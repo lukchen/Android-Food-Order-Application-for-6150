@@ -5,19 +5,23 @@ package com.androideatit.Model;
  */
 
 public class Food {
-    private String Name, Image, Description, Price, Discount, MenuId;
+    private String Name, Image, Description, Price, Discount, MenuId, FoodId, AvailabilityFlag;
 
     public Food() {
     }
 
-    public Food(String name, String image, String description, String price, String discount, String menuId) {
+    public Food(String name, String image, String description, String price, String discount, String menuId, String foodId, String availabilityFlag) {
         Name = name;
         Image = image;
         Description = description;
         Price = price;
         Discount = discount;
         MenuId = menuId;
+        FoodId = foodId;
+        AvailabilityFlag = availabilityFlag;
     }
+
+
 
     public String getName() {
         return Name;
@@ -67,6 +71,19 @@ public class Food {
         MenuId = menuId;
     }
 
+    public String getFoodId() {
+        return FoodId;
+    }
 
+    public void setFoodId(String foodId) {
+        FoodId = foodId;
+    }
 
+    public String getAvailabilityFlag() {
+        return AvailabilityFlag;
+    }
+
+    public void setAvailabilityFlag(String availabilityFlag) {
+        AvailabilityFlag = availabilityFlag;
+    }
 }
