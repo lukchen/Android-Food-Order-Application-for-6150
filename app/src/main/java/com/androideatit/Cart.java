@@ -1,6 +1,10 @@
 package com.androideatit;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -155,17 +159,17 @@ public class Cart extends AppCompatActivity {
     private void showAlertDialog() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(Cart.this);
         alertDialog.setTitle("One more step!");
-        alertDialog.setMessage("Enter your address");
+        alertDialog.setMessage("Your Order Has Been Processed");
         System.out.println("email address ");
-        final EditText edtAddress = new EditText(Cart.this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-        );
-
-        edtAddress.setLayoutParams(lp);
-        alertDialog.setView(edtAddress);
-        alertDialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
+//        final EditText edtAddress = new EditText(Cart.this);
+//        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+//                LinearLayout.LayoutParams.MATCH_PARENT,
+//                LinearLayout.LayoutParams.MATCH_PARENT
+//        );
+//
+//        edtAddress.setLayoutParams(lp);
+//        alertDialog.setView(edtAddress);
+//        alertDialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
 
         alertDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
             @Override
@@ -173,7 +177,7 @@ public class Cart extends AppCompatActivity {
                 Request request = new Request(
                         Common.currentUser.getPhone(),
                         Common.currentUser.getName(),
-                        edtAddress.getText().toString(),
+//                        edtAddress.getText().toString(),
                         txtTotalPrice.getText().toString(),
                         cart
                 );
@@ -186,6 +190,19 @@ public class Cart extends AppCompatActivity {
                 new Database(getBaseContext()).cleanCart();
                 Toast.makeText(Cart.this, "Thank you, Order placed", Toast.LENGTH_SHORT).show();
                 finish();
+
+//                This code is to show notifications in android status bar when user places order
+                Intent intent = new Intent();
+                PendingIntent pendingIntent = PendingIntent.getActivity(Cart.this,0,intent,0);
+                Notification.Builder notificationBuilder = new Notification.Builder(Cart.this)
+                        .setTicker(getString(R.string.orderPlacedStr)).setContentTitle("Order Placed")
+                        .setContentText("Your order is processing now").setSmallIcon(R.drawable.logo)
+                        .setContentIntent(pendingIntent);
+                Notification notification = notificationBuilder.build();
+                notification.flags = Notification.FLAG_AUTO_CANCEL;
+                NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                assert nm != null;
+                nm.notify(0,notification);
             }
         });
 
