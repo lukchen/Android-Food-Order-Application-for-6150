@@ -137,9 +137,9 @@ public class Cart extends AppCompatActivity {
         boolean partial = true;
         for(Order order : cart){
             for(Food food: inventoryList){
-                /*System.out.println("SH-----------IT"+food.getFoodId());
+                System.out.println("SH-----------IT"+food.getFoodId());
                 System.out.println("FU-----------CK"+order.getProductId());
-                System.out.println("DA-----------MN"+food.getAvailabilityFlag());*/
+                System.out.println("DA-----------MN"+food.getAvailabilityFlag());
                 if(food.getFoodId().equals(order.getProductId())){
                     if(food.getAvailabilityFlag().equals("0")){
                         //if the availabilityFlag of this food is "0"
