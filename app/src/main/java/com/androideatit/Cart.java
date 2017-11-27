@@ -18,6 +18,7 @@ import com.androideatit.Database.Database;
 import com.androideatit.Model.Food;
 import com.androideatit.Model.Order;
 import com.androideatit.Model.Request;
+import com.androideatit.Model.Receipt;
 import com.androideatit.ViewHolder.CartAdapter;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -35,8 +36,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.androideatit.Cart.inventory;
 import static com.androideatit.Cart.inventoryList;
+import static com.androideatit.Cart.requestList;
 
-//this thread update the inventoryList from firebase
+//this thread updates the inventoryList from firebase
 class IventoryListThread implements Runnable
 {
     DatabaseReference foods = FirebaseDatabase.getInstance().getReference("Foods");
@@ -62,6 +64,45 @@ class IventoryListThread implements Runnable
 
     }
 }
+//this thread cooks requests
+class KitchenThread implements Runnable{
+
+    @Override
+    public void run() {
+        while (true) {
+            while (requestList.size() > 0) {
+                System.out.println("The chef is working on requests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                try {
+                    //cooking time: 180 sec
+                    Thread.sleep(180000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("Finished an request!");
+
+                //The first request finished, generate receipt, then remove the finished request, working on next request in list
+                GenerateReceipt(requestList.get(0));
+                requestList.remove(0);
+
+            }
+            System.out.println("there are no requests yet, what a terrible day!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        }
+    }
+
+    public void GenerateReceipt(Request request){
+        Receipt receipt = new Receipt();
+        receipt.items = request.getFoods();
+        receipt.totalcost = request.getTotal();
+
+        //Question: How to show the receipt?
+
+
+        //Then change the order status to "Food Ready"
+
+
+    }
+}
 
 public class Cart extends AppCompatActivity {
 
@@ -77,13 +118,19 @@ public class Cart extends AppCompatActivity {
     List<Order> cart = new ArrayList<>();
     CartAdapter adapter;
 
-    //name the inventorylistthread
+    //name the threads
     Thread inventorylistthread = new Thread(new IventoryListThread());
+    Thread kitchenthread = new Thread(new KitchenThread());
 
     //name the variables in static, so they can be accessed and updated by the inventorylistthread
     static List<List<Order>> orderList = new ArrayList<>();
     static List<Food> inventoryList = new ArrayList<>();
     static Food inventory;
+    //The orderList is for inventoryList, the requestList is for the KitchenThread
+    static List<Request> requestList = new ArrayList<>();
+
+    //partial request flag
+    private boolean partial = false;
 
     //The executor can makes inventorylistthread running in interval, which is 1 hour
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -92,6 +139,9 @@ public class Cart extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
+
+        //run the kitchenthread
+        kitchenthread.start();
 
         //thread running in 1 hour interval
         executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
@@ -117,14 +167,21 @@ public class Cart extends AppCompatActivity {
                 //update invetoryList immediately first
                 executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
                 //Check if the order can only be partial
-                if(checkavailability(cart)) {
+                if(!checkavailability(cart)) {
 
                     //Create new Request
                     showAlertDialog();
 
                 }else {
 
-                    //Show user the "Partial order or cancel order options" dialog
+                    //Show user the "Partial order or cancel order options" dialog,
+
+
+                    //If user choose Partial order, then do showAlertDialog() again, and set the partial flag to true in order to set this request partially
+
+                    /*showAlertDialog();
+                    partial = true;*/
+
                 }
             }
         });
@@ -134,17 +191,21 @@ public class Cart extends AppCompatActivity {
 
     //Find out whether the foods in order contains unavailable food
     private boolean checkavailability(List<Order> cart){
-        boolean partial = true;
+        boolean partial = false;
+        if(cart.size()==0){
+            //Cart is empty, do nothing
+            partial = true;
+        }
         for(Order order : cart){
             for(Food food: inventoryList){
-                System.out.println("SH-----------IT"+food.getFoodId());
+                /*System.out.println("SH-----------IT"+food.getFoodId());
                 System.out.println("FU-----------CK"+order.getProductId());
-                System.out.println("DA-----------MN"+food.getAvailabilityFlag());
+                System.out.println("DA-----------MN"+food.getAvailabilityFlag());*/
                 if(food.getFoodId().equals(order.getProductId())){
                     if(food.getAvailabilityFlag().equals("0")){
                         //if the availabilityFlag of this food is "0"
-                        System.out.println("FUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCK");
-                        partial = false;
+                        System.out.println("FUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCK");
+                        partial = true;
                     }
                 }
             }
@@ -181,7 +242,16 @@ public class Cart extends AppCompatActivity {
                 //Submit to Firebase
                 //We will using System.Current
                 requests.child(String.valueOf(System.currentTimeMillis())).setValue(request);
+                if(partial) {
+                    request.setPartial(true);
+                    //add the request to top of the requestList if it's partial request
+                    requestList.add(0,request);
 
+                    //default partial is false, set it back to false to check next request
+                    partial = false;
+                }else {
+                    requestList.add(request);
+                }
                 //Delete the cart
                 new Database(getBaseContext()).cleanCart();
                 Toast.makeText(Cart.this, "Thank you, Order placed", Toast.LENGTH_SHORT).show();
