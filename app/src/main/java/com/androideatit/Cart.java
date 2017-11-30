@@ -166,7 +166,8 @@ public class Cart extends AppCompatActivity {
         btnPlace.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                //update invetoryList immediately first
+                executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
                 if(!checkavailability(cart)) {
 
                     //Create new Request
