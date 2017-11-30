@@ -131,6 +131,8 @@ public class Cart extends AppCompatActivity {
 
     //partial request flag
     private boolean partial = false;
+    //unavailable food price
+    static int unavailablefoodprice = 0;
 
     //The executor can makes inventorylistthread running in interval, which is 1 hour
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -206,6 +208,7 @@ public class Cart extends AppCompatActivity {
                         //if the availabilityFlag of this food is "0"
                         System.out.println("FUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCK");
                         partial = true;
+                        unavailablefoodprice += Integer.parseInt(food.getPrice());
                     }
                 }
             }
@@ -239,9 +242,6 @@ public class Cart extends AppCompatActivity {
                         cart
                 );
 
-                //Submit to Firebase
-                //We will using System.Current
-                requests.child(String.valueOf(System.currentTimeMillis())).setValue(request);
                 if(partial) {
                     request.setPartial(true);
                     //add the request to top of the requestList if it's partial request
@@ -249,9 +249,19 @@ public class Cart extends AppCompatActivity {
 
                     //default partial is false, set it back to false to check next request
                     partial = false;
+
+                    //cut the price of unavailable food
+                    request.setTotal(Integer.toString(Integer.parseInt(request.getTotal()) - unavailablefoodprice));
+                    unavailablefoodprice = 0;
+
                 }else {
                     requestList.add(request);
                 }
+
+                //Submit to Firebase
+                //We will using System.Current
+                requests.child(String.valueOf(System.currentTimeMillis())).setValue(request);
+
                 //Delete the cart
                 new Database(getBaseContext()).cleanCart();
                 Toast.makeText(Cart.this, "Thank you, Order placed", Toast.LENGTH_SHORT).show();
