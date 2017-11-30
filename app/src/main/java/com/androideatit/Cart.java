@@ -114,6 +114,7 @@ public class Cart extends AppCompatActivity {
 
     TextView txtTotalPrice;
     Button btnPlace;
+    int totalPrice;
 
     List<Order> cart = new ArrayList<>();
     CartAdapter adapter;
@@ -164,11 +165,8 @@ public class Cart extends AppCompatActivity {
         //When the "Place Order" button clicked
         btnPlace.setOnClickListener(new View.OnClickListener() {
             @Override
-           public void onClick(View v) {
+            public void onClick(View v) {
 
-                //update invetoryList immediately first
-                executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
-                //Check if the order can only be partial
                 if(!checkavailability(cart)) {
 
                     //Create new Request
@@ -177,7 +175,21 @@ public class Cart extends AppCompatActivity {
                 }else {
 
                     //Show user the "Partial order or cancel order options" dialog,
+                    System.out.println("Food Unavailble");
+                    AlertDialog.Builder alertPartialDialog = new AlertDialog.Builder(Cart.this);
+                    alertPartialDialog.setTitle("Some food is unavailable");
+                    alertPartialDialog.setMessage("Do you accept partial order ?");
 
+                    alertPartialDialog.setPositiveButton("YES", new DialogInterface.OnClickListener(){
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            partial = true;
+                            showAlertDialog();
+                        }
+                    });
+
+                    alertPartialDialog.show();
 
                     //If user choose Partial order, then do showAlertDialog() again, and set the partial flag to true in order to set this request partially
 
@@ -251,7 +263,11 @@ public class Cart extends AppCompatActivity {
                     partial = false;
 
                     //cut the price of unavailable food
-                    request.setTotal(Integer.toString(Integer.parseInt(request.getTotal()) - unavailablefoodprice));
+                    //keep track of totalprice using global variable
+                    //txtTotalPrice is in currency format unable to parse
+                    Locale locale = new Locale("en","US");
+                    NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
+                    request.setTotal(fmt.format(totalPrice - unavailablefoodprice));
                     unavailablefoodprice = 0;
 
                 }else {
@@ -292,7 +308,7 @@ public class Cart extends AppCompatActivity {
             total+=(Integer.parseInt(order.getPrice()))*(Integer.parseInt(order.getQuanlity()));
         Locale locale = new Locale("en","US");
         NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
-
+        totalPrice =total;
         txtTotalPrice.setText(fmt.format(total));
 
     }
