@@ -1,11 +1,16 @@
 package com.androideatit;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -34,9 +39,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static android.content.ContentValues.TAG;
 import static com.androideatit.Cart.inventory;
 import static com.androideatit.Cart.inventoryList;
 import static com.androideatit.Cart.requestList;
+import static com.androideatit.Cart.requestId;
+import static com.androideatit.Cart.total;
 
 //this thread updates the inventoryList from firebase
 class IventoryListThread implements Runnable
@@ -64,45 +72,7 @@ class IventoryListThread implements Runnable
 
     }
 }
-//this thread cooks requests
-class KitchenThread implements Runnable{
 
-    @Override
-    public void run() {
-        while (true) {
-            while (requestList.size() > 0) {
-                System.out.println("The chef is working on requests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                try {
-                    //cooking time: 180 sec
-                    Thread.sleep(180000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                System.out.println("Finished an request!");
-
-                //The first request finished, generate receipt, then remove the finished request, working on next request in list
-                GenerateReceipt(requestList.get(0));
-                requestList.remove(0);
-
-            }
-            System.out.println("there are no requests yet, what a terrible day!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        }
-    }
-
-    public void GenerateReceipt(Request request){
-        Receipt receipt = new Receipt();
-        receipt.items = request.getFoods();
-        receipt.totalcost = request.getTotal();
-
-        //Question: How to show the receipt?
-
-
-        //Then change the order status to "Food Ready"
-
-
-    }
-}
 
 public class Cart extends AppCompatActivity {
 
@@ -115,6 +85,9 @@ public class Cart extends AppCompatActivity {
     TextView txtTotalPrice;
     Button btnPlace;
 
+
+
+
     List<Order> cart = new ArrayList<>();
     CartAdapter adapter;
 
@@ -126,11 +99,16 @@ public class Cart extends AppCompatActivity {
     static List<List<Order>> orderList = new ArrayList<>();
     static List<Food> inventoryList = new ArrayList<>();
     static Food inventory;
+    static String requestId;
     //The orderList is for inventoryList, the requestList is for the KitchenThread
     static List<Request> requestList = new ArrayList<>();
+    static int total;
 
     //partial request flag
     private boolean partial = false;
+
+    //unavailable food price
+    static int unavailablefoodprice=0;
 
     //The executor can makes inventorylistthread running in interval, which is 1 hour
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -141,7 +119,10 @@ public class Cart extends AppCompatActivity {
         setContentView(R.layout.activity_cart);
 
         //run the kitchenthread
+
         kitchenthread.start();
+
+
 
         //thread running in 1 hour interval
         executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
@@ -187,6 +168,7 @@ public class Cart extends AppCompatActivity {
         });
 
         loadListFood();
+
     }
 
     //Find out whether the foods in order contains unavailable food
@@ -206,6 +188,7 @@ public class Cart extends AppCompatActivity {
                         //if the availabilityFlag of this food is "0"
                         System.out.println("FUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCK");
                         partial = true;
+                        unavailablefoodprice += Integer.parseInt(food.getPrice());
                     }
                 }
             }
@@ -241,7 +224,8 @@ public class Cart extends AppCompatActivity {
 
                 //Submit to Firebase
                 //We will using System.Current
-                requests.child(String.valueOf(System.currentTimeMillis())).setValue(request);
+                requestId=String.valueOf(System.currentTimeMillis());
+                requests.child(requestId).setValue(request);
                 if(partial) {
                     request.setPartial(true);
                     //add the request to top of the requestList if it's partial request
@@ -270,6 +254,64 @@ public class Cart extends AppCompatActivity {
 
     }
 
+    //this thread cooks requests
+    class KitchenThread implements Runnable{
+
+        @Override
+        public void run() {
+            while (true) {
+                while (requestList.size() > 0) {
+                    DatabaseReference requests = FirebaseDatabase.getInstance().getReference("Requests");
+                    requests.child(requestId).child("status").setValue("1");
+                    System.out.println("The chef is working on requests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    try {
+                        //cooking time: 180 sec
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("Oder Prepared!");
+
+
+                    requests.child(requestId).child("status").setValue("2");
+                    try {
+                        //packaging time: 180 sec
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("Order Packaged!");
+
+                    requests.child(requestId).child("status").setValue("3");
+
+                    //The first request finished, generate receipt, then remove the finished request, working on next request in list
+                    Looper.prepare();
+                    Toast.makeText(Cart.this,GenerateReceipt(requestList.get(0)),Toast.LENGTH_SHORT).show();
+                    Looper.loop();
+                    requestList.remove(0);
+
+                }
+                System.out.println("there are no requests yet, what a terrible day!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }
+        }
+
+        public String GenerateReceipt(Request request){
+            Receipt receipt = new Receipt();
+            receipt.items = request.getFoods();
+            receipt.totalcost = request.getTotal();
+            String message="";
+            for(Order i:receipt.items){
+                message+=i.getProductName()+" :"+i.getQuanlity()+"\n";
+            }
+            message+="Total: "+total;
+            return message;
+
+
+        }
+    }
+
+
     private void loadListFood() {
         cart = new Database(this).getCarts();
         orderList.add(cart);
@@ -277,12 +319,16 @@ public class Cart extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         //Calculate total price
-        int total = 0;
+        total = 0;
         for(Order order:cart)
             total+=(Integer.parseInt(order.getPrice()))*(Integer.parseInt(order.getQuanlity()));
         Locale locale = new Locale("en","US");
         NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
 
+        // add tax, profit to total, do we need to show the tax and profit on the app??
+        int tax= (int) (total*0.06);
+        int profit=(int)(total*0.3);
+        total+=tax+profit;
         txtTotalPrice.setText(fmt.format(total));
 
     }
