@@ -65,10 +65,8 @@ public class OrderStatus extends AppCompatActivity {
         if(status.equals("0"))
             return "Placed";
         else if(status.equals("1"))
-            return "Preparing";
-        else if(status.equals("2"))
-            return "Packaging";
+            return "On my way";
         else
-            return "Food Ready";
+            return "Shipped";
     }
 }
