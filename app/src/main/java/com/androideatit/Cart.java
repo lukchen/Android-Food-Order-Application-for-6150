@@ -84,6 +84,7 @@ public class Cart extends AppCompatActivity {
 
     TextView txtTotalPrice;
     Button btnPlace;
+    int totalPrice;
 
 
 
@@ -106,6 +107,8 @@ public class Cart extends AppCompatActivity {
 
     //partial request flag
     private boolean partial = false;
+    //unavailable food price
+    static int unavailablefoodprice = 0;
 
     //unavailable food price
     static int unavailablefoodprice=0;
@@ -143,11 +146,9 @@ public class Cart extends AppCompatActivity {
         //When the "Place Order" button clicked
         btnPlace.setOnClickListener(new View.OnClickListener() {
             @Override
-           public void onClick(View v) {
-
+            public void onClick(View v) {
                 //update invetoryList immediately first
                 executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
-                //Check if the order can only be partial
                 if(!checkavailability(cart)) {
 
                     //Create new Request
@@ -156,7 +157,21 @@ public class Cart extends AppCompatActivity {
                 }else {
 
                     //Show user the "Partial order or cancel order options" dialog,
+                    System.out.println("Food Unavailble");
+                    AlertDialog.Builder alertPartialDialog = new AlertDialog.Builder(Cart.this);
+                    alertPartialDialog.setTitle("Some food is unavailable");
+                    alertPartialDialog.setMessage("Do you accept partial order ?");
 
+                    alertPartialDialog.setPositiveButton("YES", new DialogInterface.OnClickListener(){
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            partial = true;
+                            showAlertDialog();
+                        }
+                    });
+
+                    alertPartialDialog.show();
 
                     //If user choose Partial order, then do showAlertDialog() again, and set the partial flag to true in order to set this request partially
 
@@ -222,10 +237,13 @@ public class Cart extends AppCompatActivity {
                         cart
                 );
 
+ latest
                 //Submit to Firebase
                 //We will using System.Current
                 requestId=String.valueOf(System.currentTimeMillis());
                 requests.child(requestId).setValue(request);
+
+ latest
                 if(partial) {
                     request.setPartial(true);
                     //add the request to top of the requestList if it's partial request
@@ -233,9 +251,23 @@ public class Cart extends AppCompatActivity {
 
                     //default partial is false, set it back to false to check next request
                     partial = false;
+
+                    //cut the price of unavailable food
+                    //keep track of totalprice using global variable
+                    //txtTotalPrice is in currency format unable to parse
+                    Locale locale = new Locale("en","US");
+                    NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
+                    request.setTotal(fmt.format(totalPrice - unavailablefoodprice));
+                    unavailablefoodprice = 0;
+
                 }else {
                     requestList.add(request);
                 }
+
+                //Submit to Firebase
+                //We will using System.Current
+                requests.child(String.valueOf(System.currentTimeMillis())).setValue(request);
+
                 //Delete the cart
                 new Database(getBaseContext()).cleanCart();
                 Toast.makeText(Cart.this, "Thank you, Order placed", Toast.LENGTH_SHORT).show();
@@ -324,11 +356,15 @@ public class Cart extends AppCompatActivity {
             total+=(Integer.parseInt(order.getPrice()))*(Integer.parseInt(order.getQuanlity()));
         Locale locale = new Locale("en","US");
         NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
+ latest
 
         // add tax, profit to total, do we need to show the tax and profit on the app??
         int tax= (int) (total*0.06);
         int profit=(int)(total*0.3);
         total+=tax+profit;
+
+        totalPrice =total;
+ latest
         txtTotalPrice.setText(fmt.format(total));
 
     }
