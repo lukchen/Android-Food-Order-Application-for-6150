@@ -107,8 +107,6 @@ public class Cart extends AppCompatActivity {
 
     //partial request flag
     private boolean partial = false;
-    //unavailable food price
-    static int unavailablefoodprice = 0;
 
     //unavailable food price
     static int unavailablefoodprice=0;
@@ -237,13 +235,12 @@ public class Cart extends AppCompatActivity {
                         cart
                 );
 
- latest
+
                 //Submit to Firebase
                 //We will using System.Current
                 requestId=String.valueOf(System.currentTimeMillis());
                 requests.child(requestId).setValue(request);
 
- latest
                 if(partial) {
                     request.setPartial(true);
                     //add the request to top of the requestList if it's partial request
@@ -356,7 +353,7 @@ public class Cart extends AppCompatActivity {
             total+=(Integer.parseInt(order.getPrice()))*(Integer.parseInt(order.getQuanlity()));
         Locale locale = new Locale("en","US");
         NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
- latest
+
 
         // add tax, profit to total, do we need to show the tax and profit on the app??
         int tax= (int) (total*0.06);
@@ -364,7 +361,7 @@ public class Cart extends AppCompatActivity {
         total+=tax+profit;
 
         totalPrice =total;
- latest
+
         txtTotalPrice.setText(fmt.format(total));
 
     }
