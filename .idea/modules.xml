@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AndroidEatIt.iml" filepath="$PROJECT_DIR$/AndroidEatIt.iml" />
-      <module fileurl="file://C:\Users\123456\AndroidStudioProjects\AndroidEatIt\AndroidEatIt 5.59.33 PM.iml" filepath="C:\Users\123456\AndroidStudioProjects\AndroidEatIt\AndroidEatIt 5.59.33 PM.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

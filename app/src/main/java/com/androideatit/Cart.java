@@ -84,10 +84,7 @@ public class Cart extends AppCompatActivity {
 
     TextView txtTotalPrice;
     Button btnPlace;
-    int totalPrice;
-
-
-
+    float totalPrice;
 
     List<Order> cart = new ArrayList<>();
     CartAdapter adapter;
@@ -95,6 +92,7 @@ public class Cart extends AppCompatActivity {
     //name the threads
     Thread inventorylistthread = new Thread(new IventoryListThread());
     Thread kitchenthread = new Thread(new KitchenThread());
+    static boolean kitchenthreadrunonlyonce = false;
 
     //name the variables in static, so they can be accessed and updated by the inventorylistthread
     static List<List<Order>> orderList = new ArrayList<>();
@@ -103,13 +101,13 @@ public class Cart extends AppCompatActivity {
     static String requestId;
     //The orderList is for inventoryList, the requestList is for the KitchenThread
     static List<Request> requestList = new ArrayList<>();
-    static int total;
+    static float total;
 
     //partial request flag
     private boolean partial = false;
 
     //unavailable food price
-    static int unavailablefoodprice=0;
+    static float unavailablefoodprice=0;
 
     //The executor can makes inventorylistthread running in interval, which is 1 hour
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -118,12 +116,6 @@ public class Cart extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
-
-        //run the kitchenthread
-
-        kitchenthread.start();
-
-
 
         //thread running in 1 hour interval
         executor.scheduleAtFixedRate(inventorylistthread, 0, 60, TimeUnit.MINUTES);
@@ -202,9 +194,12 @@ public class Cart extends AppCompatActivity {
                         System.out.println("FUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCK");
                         partial = true;
                         unavailablefoodprice += Integer.parseInt(food.getPrice());
+                        unavailablefoodprice = (float) (unavailablefoodprice*1.36);
                     }
                 }
             }
+
+
         }
         return partial;
     }
@@ -235,12 +230,6 @@ public class Cart extends AppCompatActivity {
                         cart
                 );
 
-
-                //Submit to Firebase
-                //We will using System.Current
-                requestId=String.valueOf(System.currentTimeMillis());
-                requests.child(requestId).setValue(request);
-
                 if(partial) {
                     request.setPartial(true);
                     //add the request to top of the requestList if it's partial request
@@ -263,8 +252,14 @@ public class Cart extends AppCompatActivity {
 
                 //Submit to Firebase
                 //We will using System.Current
-                requests.child(String.valueOf(System.currentTimeMillis())).setValue(request);
+                requestId=String.valueOf(System.currentTimeMillis());
+                requests.child(requestId).setValue(request);
 
+                //run the kitchenthread
+                if(!kitchenthreadrunonlyonce) {
+                    kitchenthread.start();
+                    kitchenthreadrunonlyonce = true;
+                }
                 //Delete the cart
                 new Database(getBaseContext()).cleanCart();
                 Toast.makeText(Cart.this, "Thank you, Order placed", Toast.LENGTH_SHORT).show();
@@ -300,8 +295,7 @@ public class Cart extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    System.out.println("Oder Prepared!");
-
+                    System.out.println("Order Prepared!");
 
                     requests.child(requestId).child("status").setValue("2");
                     try {
@@ -319,7 +313,7 @@ public class Cart extends AppCompatActivity {
                     Toast.makeText(Cart.this,GenerateReceipt(requestList.get(0)),Toast.LENGTH_SHORT).show();
                     Looper.loop();
                     requestList.remove(0);
-
+                    System.out.println("there are no requests yet" + requestList.size());
                 }
                 System.out.println("there are no requests yet, what a terrible day!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
@@ -350,14 +344,14 @@ public class Cart extends AppCompatActivity {
         //Calculate total price
         total = 0;
         for(Order order:cart)
-            total+=(Integer.parseInt(order.getPrice()))*(Integer.parseInt(order.getQuanlity()));
+            total+=(float) (Integer.parseInt(order.getPrice()))*(Integer.parseInt(order.getQuanlity()));
         Locale locale = new Locale("en","US");
         NumberFormat fmt = NumberFormat.getCurrencyInstance(locale);
 
 
         // add tax, profit to total, do we need to show the tax and profit on the app??
-        int tax= (int) (total*0.06);
-        int profit=(int)(total*0.3);
+        float tax= (float) (total*0.06);
+        float profit = (float) (total*0.3);
         total+=tax+profit;
 
         totalPrice =total;
