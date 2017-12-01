@@ -281,12 +281,13 @@ public class Cart extends AppCompatActivity {
 
     //this thread cooks requests
     class KitchenThread implements Runnable{
+        Looper myLooper = Looper.myLooper();
 
         @Override
         public void run() {
             while (true) {
                 while (requestList.size() > 0) {
-                    DatabaseReference requests = FirebaseDatabase.getInstance().getReference("Requests");
+                    final DatabaseReference requests = FirebaseDatabase.getInstance().getReference("Requests");
                     requests.child(requestId).child("status").setValue("1");
                     System.out.println("The chef is working on requests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     try {
@@ -310,12 +311,25 @@ public class Cart extends AppCompatActivity {
                     requests.child(requestId).child("status").setValue("3");
 
                     //The first request finished, generate receipt, then remove the finished request, working on next request in list
-                    Looper.prepare();
-                    Toast.makeText(Cart.this,GenerateReceipt(requestList.get(0)),Toast.LENGTH_SHORT).show();
-                    Looper.loop();
+                    new Thread()
+                    {
+                        public void run()
+                        {
+                            Cart.this.runOnUiThread(new Runnable()
+                            {
+                                public void run()
+                                {
+                                    if(requestList.size()>0)
+                                    Toast.makeText(Cart.this,GenerateReceipt(requestList.get(0)),Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    }.start();
+
                     requestList.remove(0);
                     System.out.println("there are no requests yet" + requestList.size());
                 }
+
                 System.out.println("there are no requests yet, what a terrible day!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
         }
