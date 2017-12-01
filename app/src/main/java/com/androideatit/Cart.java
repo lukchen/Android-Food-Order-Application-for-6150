@@ -257,6 +257,7 @@ public class Cart extends AppCompatActivity {
 
                 //run the kitchenthread
                 if(!kitchenthreadrunonlyonce) {
+                    //The reason I start this thread here is that the requestList must be not empty when this thread running, so it cannot be started in Oncreate()
                     kitchenthread.start();
                     kitchenthreadrunonlyonce = true;
                 }
