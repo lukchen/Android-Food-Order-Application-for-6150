@@ -92,7 +92,6 @@ public class Cart extends AppCompatActivity {
     //name the threads
     Thread inventorylistthread = new Thread(new IventoryListThread());
     Thread kitchenthread = new Thread(new KitchenThread());
-    static boolean kitchenthreadrunonlyonce = false;
 
     //name the variables in static, so they can be accessed and updated by the inventorylistthread
     static List<List<Order>> orderList = new ArrayList<>();
@@ -256,11 +255,8 @@ public class Cart extends AppCompatActivity {
                 requests.child(requestId).setValue(request);
 
                 //run the kitchenthread
-                if(!kitchenthreadrunonlyonce) {
-                    //The reason I start this thread here is that the requestList must be not empty when this thread running, so it cannot be started in Oncreate()
-                    kitchenthread.start();
-                    kitchenthreadrunonlyonce = true;
-                }
+                kitchenthread.start();
+
                 //Delete the cart
                 new Database(getBaseContext()).cleanCart();
                 Toast.makeText(Cart.this, "Thank you, Order placed", Toast.LENGTH_SHORT).show();
@@ -281,13 +277,12 @@ public class Cart extends AppCompatActivity {
 
     //this thread cooks requests
     class KitchenThread implements Runnable{
-        Looper myLooper = Looper.myLooper();
 
         @Override
         public void run() {
             while (true) {
                 while (requestList.size() > 0) {
-                    final DatabaseReference requests = FirebaseDatabase.getInstance().getReference("Requests");
+                    DatabaseReference requests = FirebaseDatabase.getInstance().getReference("Requests");
                     requests.child(requestId).child("status").setValue("1");
                     System.out.println("The chef is working on requests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     try {
@@ -297,7 +292,7 @@ public class Cart extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    System.out.println("Order Prepared!");
+                    System.out.println("Oder Prepared!");
 
                     requests.child(requestId).child("status").setValue("2");
                     try {
@@ -311,25 +306,12 @@ public class Cart extends AppCompatActivity {
                     requests.child(requestId).child("status").setValue("3");
 
                     //The first request finished, generate receipt, then remove the finished request, working on next request in list
-                    new Thread()
-                    {
-                        public void run()
-                        {
-                            Cart.this.runOnUiThread(new Runnable()
-                            {
-                                public void run()
-                                {
-                                    if(requestList.size()>0)
-                                    Toast.makeText(Cart.this,GenerateReceipt(requestList.get(0)),Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }
-                    }.start();
-
+                    Looper.prepare();
+                    Toast.makeText(Cart.this,GenerateReceipt(requestList.get(0)),Toast.LENGTH_SHORT).show();
+                    Looper.loop();
                     requestList.remove(0);
-                    System.out.println("there are no requests yet" + requestList.size());
-                }
 
+                }
                 System.out.println("there are no requests yet, what a terrible day!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
         }
