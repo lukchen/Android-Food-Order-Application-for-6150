@@ -1,16 +1,23 @@
 package com.androideatit;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.ContactsContract;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -163,7 +170,6 @@ public class Cart extends AppCompatActivity {
                     alertPartialDialog.show();
 
                     //If user choose Partial order, then do showAlertDialog() again, and set the partial flag to true in order to set this request partially
-
                     /*showAlertDialog();
                     partial = true;*/
 
@@ -245,6 +251,8 @@ public class Cart extends AppCompatActivity {
                     request.setTotal(fmt.format(totalPrice - unavailablefoodprice));
                     unavailablefoodprice = 0;
 
+
+
                 }else {
                     requestList.add(request);
                 }
@@ -259,10 +267,25 @@ public class Cart extends AppCompatActivity {
 
                 //Delete the cart
                 new Database(getBaseContext()).cleanCart();
+
                 Toast.makeText(Cart.this, "Thank you, Order placed", Toast.LENGTH_SHORT).show();
                 finish();
+
+//                Code to show notification
+                Intent intent = new Intent();
+                PendingIntent pendingIntent = PendingIntent.getActivity(Cart.this,0,intent,0);
+                Notification.Builder notificationBuilder = new Notification.Builder(Cart.this)
+                        .setTicker("Order Placed").setContentTitle("Order Placed")
+                        .setContentText("Your order is processing now").setSmallIcon(R.drawable.logo)
+                        .setContentIntent(pendingIntent);
+                Notification notification = notificationBuilder.build();
+                notification.flags = Notification.FLAG_AUTO_CANCEL;
+                NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                assert nm != null;
+                nm.notify(0,notification);
             }
         });
+
 
         /*alertDialog.setPositiveButton("NO", new DialogInterface.OnClickListener() {
             @Override
@@ -272,6 +295,10 @@ public class Cart extends AppCompatActivity {
         });*/
 
         alertDialog.show();
+        //                This code is to show notifications in android status bar when user places order
+        // notification is selected
+
+
 
     }
 
@@ -292,7 +319,7 @@ public class Cart extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    System.out.println("Oder Prepared!");
+                    System.out.println("Order Prepared!");
 
                     requests.child(requestId).child("status").setValue("2");
                     try {
@@ -357,6 +384,35 @@ public class Cart extends AppCompatActivity {
 
     }
 
+    //Delete item
 
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        System.out.println("I CAME HERE?");
+        System.out.println(item.getTitle());
+        if(item.getTitle().equals(Common.DELETE)){
+            System.out.println("I CAME HERE YAY");
+            System.out.println(item.getItemId());
+            System.err.println(item.getOrder());
+            deleteFoodItem(item.getOrder());
+        }
+        return super.onContextItemSelected(item);
+    }
+
+    private void deleteFoodItem(int ord) {
+        cart = new Database(this).getCarts();
+        String order1 = cart.get(ord).getProductId();
+        System.out.println("The order is " +order1);
+        for(Order order:cart){
+            System.err.println("The order id is " + order.getProductId());
+            if(order.getProductId().equals(order1)){
+                System.err.println(order.getProductName());
+                System.err.println("I CAME HERE FUCK YEAAAAAHHHHHH");
+                new Database(getBaseContext()).removeFromCart(order1);
+            }
+        }
+        loadListFood();
+    }
 
 }
