@@ -112,7 +112,8 @@ public class Cart extends AppCompatActivity {
     //partial request flag
     private boolean partial = false;
 
-    //unavailable food price
+    //unavailable food information
+    static String unavailablefoodnames="";
     static float unavailablefoodprice=0;
 
     //The executor can makes inventorylistthread running in interval, which is 1 hour
@@ -155,7 +156,8 @@ public class Cart extends AppCompatActivity {
                     //Show user the "Partial order or cancel order options" dialog,
                     System.out.println("Food Unavailble");
                     AlertDialog.Builder alertPartialDialog = new AlertDialog.Builder(Cart.this);
-                    alertPartialDialog.setTitle("Some food is unavailable");
+                    alertPartialDialog.setTitle(unavailablefoodnames + " is unavailable");
+                    unavailablefoodnames="";
                     alertPartialDialog.setMessage("Do you accept partial order ?");
 
                     alertPartialDialog.setPositiveButton("YES", new DialogInterface.OnClickListener(){
@@ -196,10 +198,10 @@ public class Cart extends AppCompatActivity {
                 if(food.getFoodId().equals(order.getProductId())){
                     if(food.getAvailabilityFlag().equals("0")){
                         //if the availabilityFlag of this food is "0"
-                        System.out.println("FUCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCK");
                         partial = true;
                         unavailablefoodprice += Integer.parseInt(food.getPrice());
                         unavailablefoodprice = (float) (unavailablefoodprice*1.36);
+                        unavailablefoodnames += food.getName();
                     }
                 }
             }
