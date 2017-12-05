@@ -335,8 +335,9 @@ public class Cart extends AppCompatActivity {
                     //The first request finished, generate receipt, then remove the finished request, working on next request in list
                     Looper.prepare();
                     Toast.makeText(Cart.this,GenerateReceipt(requestList.get(0)),Toast.LENGTH_SHORT).show();
-                    Looper.loop();
                     requestList.remove(0);
+
+                    Looper.loop();
 
                 }
                 System.out.println("there are no requests yet, what a terrible day!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
