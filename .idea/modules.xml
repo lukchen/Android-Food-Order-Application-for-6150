@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/AndroidEatIt.iml" filepath="$PROJECT_DIR$/AndroidEatIt.iml" />
       <module fileurl="file://C:\Users\123456\AndroidStudioProjects\OODFinalLatest\AndroidEatIt.iml" filepath="C:\Users\123456\AndroidStudioProjects\OODFinalLatest\AndroidEatIt.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/OODFinalLatest.iml" filepath="$PROJECT_DIR$/.idea/OODFinalLatest.iml" />
+      <module fileurl="file://C:\Users\123456\AndroidStudioProjects\AndroidEatIt\.idea\OODFinalLatest.iml" filepath="C:\Users\123456\AndroidStudioProjects\AndroidEatIt\.idea\OODFinalLatest.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
