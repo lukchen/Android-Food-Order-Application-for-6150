@@ -104,7 +104,7 @@ public class Cart extends AppCompatActivity {
     static List<List<Order>> orderList = new ArrayList<>();
     static List<Food> inventoryList = new ArrayList<>();
     static Food inventory;
-    static String requestId;
+    static List<String> requestId  = new ArrayList<>();
     //The orderList is for inventoryList, the requestList is for the KitchenThread
     static List<Request> requestList = new ArrayList<>();
     static float total;
@@ -261,8 +261,8 @@ public class Cart extends AppCompatActivity {
 
                 //Submit to Firebase
                 //We will using System.Current
-                requestId=String.valueOf(System.currentTimeMillis());
-                requests.child(requestId).setValue(request);
+                requestId.add(String.valueOf(System.currentTimeMillis()));
+                requests.child(requestId.get(requestId.size()-1)).setValue(request);
 
                 //run the kitchenthread
                 kitchenthread.start();
@@ -312,7 +312,7 @@ public class Cart extends AppCompatActivity {
             while (true) {
                 while (requestList.size() > 0) {
                     DatabaseReference requests = FirebaseDatabase.getInstance().getReference("Requests");
-                    requests.child(requestId).child("status").setValue("1");
+                    requests.child(requestId.get(0)).child("status").setValue("1");
                     System.out.println("The chef is working on requests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     try {
                         //cooking time: 180 sec
@@ -323,7 +323,7 @@ public class Cart extends AppCompatActivity {
 
                     System.out.println("Order Prepared!");
 
-                    requests.child(requestId).child("status").setValue("2");
+                    requests.child(requestId.get(0)).child("status").setValue("2");
                     try {
                         //packaging time: 180 sec
                         Thread.sleep(10000);
@@ -332,12 +332,13 @@ public class Cart extends AppCompatActivity {
                     }
                     System.out.println("Order Packaged!");
 
-                    requests.child(requestId).child("status").setValue("3");
+                    requests.child(requestId.get(0)).child("status").setValue("3");
 
                     //The first request finished, generate receipt, then remove the finished request, working on next request in list
                     Looper.prepare();
                     Toast.makeText(Cart.this,GenerateReceipt(requestList.get(0)),Toast.LENGTH_SHORT).show();
                     requestList.remove(0);
+                    requestId.remove(0);
 
                     Looper.loop();
 
@@ -350,7 +351,7 @@ public class Cart extends AppCompatActivity {
             Receipt receipt = new Receipt();
             receipt.items = request.getFoods();
             receipt.totalcost = request.getTotal();
-            String message="";
+            String message="---------Food Ready! Thank you!---------\n";
             for(Order i:receipt.items){
                 message+=i.getProductName()+" :"+i.getQuanlity()+"\n";
             }
