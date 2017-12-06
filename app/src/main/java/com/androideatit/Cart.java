@@ -314,6 +314,19 @@ public class Cart extends AppCompatActivity {
                     DatabaseReference requests = FirebaseDatabase.getInstance().getReference("Requests");
                     requests.child(requestId.get(0)).child("status").setValue("1");
                     System.out.println("The chef is working on requests!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+                    Intent intent = new Intent();
+                    PendingIntent pendingIntent = PendingIntent.getActivity(Cart.this,0,intent,0);
+                    Notification.Builder notificationBuilder = new Notification.Builder(Cart.this)
+                            .setTicker("Order Accepted").setContentTitle("Order Accepted")
+                            .setContentText("The Chef is working on your order").setSmallIcon(R.drawable.logo)
+                            .setContentIntent(pendingIntent);
+                    Notification notification = notificationBuilder.build();
+                    notification.flags = Notification.FLAG_AUTO_CANCEL;
+                    NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    assert nm != null;
+                    nm.notify(0,notification);
+
                     try {
                         //cooking time: 180 sec
                         Thread.sleep(10000);
@@ -323,6 +336,18 @@ public class Cart extends AppCompatActivity {
 
                     System.out.println("Order Prepared!");
 
+                    Intent intent1 = new Intent();
+                    PendingIntent pendingIntent1 = PendingIntent.getActivity(Cart.this,0,intent1,0);
+                    Notification.Builder notificationBuilder1 = new Notification.Builder(Cart.this)
+                            .setTicker("Order Prepared").setContentTitle("Order Prepared")
+                            .setContentText("Your order is prepared").setSmallIcon(R.drawable.logo)
+                            .setContentIntent(pendingIntent1);
+                    Notification notification1 = notificationBuilder1.build();
+                    notification1.flags = Notification.FLAG_AUTO_CANCEL;
+                    NotificationManager nm1 = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    assert nm1 != null;
+                    nm1.notify(0,notification1);
+
                     requests.child(requestId.get(0)).child("status").setValue("2");
                     try {
                         //packaging time: 180 sec
@@ -331,6 +356,18 @@ public class Cart extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     System.out.println("Order Packaged!");
+
+                    Intent intent2 = new Intent();
+                    PendingIntent pendingIntent2 = PendingIntent.getActivity(Cart.this,0,intent2,0);
+                    Notification.Builder notificationBuilder2 = new Notification.Builder(Cart.this)
+                            .setTicker("Order Packaged").setContentTitle("Order Packaged")
+                            .setContentText("Your order is packaged and ready to pick up!").setSmallIcon(R.drawable.logo)
+                            .setContentIntent(pendingIntent2);
+                    Notification notification2 = notificationBuilder2.build();
+                    notification2.flags = Notification.FLAG_AUTO_CANCEL;
+                    NotificationManager nm2 = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    assert nm2 != null;
+                    nm2.notify(0,notification2);
 
                     requests.child(requestId.get(0)).child("status").setValue("3");
 
