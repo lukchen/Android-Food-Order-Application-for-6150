@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.media.Image;
 import android.support.v7.widget.RecyclerView;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.amulyakhare.textdrawable.TextDrawable;
+import com.androideatit.Common.Common;
 import com.androideatit.Interface.ItemClickListener;
 import com.androideatit.Model.Order;
 import com.androideatit.R;
@@ -26,7 +28,7 @@ import java.util.Locale;
  * Created by 123456 on 2017/11/19.
  */
 
-class CartViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+class CartViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnCreateContextMenuListener {
 
     public TextView txt_cart_name, txt_price;
     public ImageView img_cart_count;
@@ -42,7 +44,7 @@ class CartViewHolder extends RecyclerView.ViewHolder implements View.OnClickList
         txt_cart_name = itemView.findViewById(R.id.cart_item_name);
         txt_price = itemView.findViewById(R.id.cart_item_Price);
         img_cart_count = itemView.findViewById(R.id.cart_item_count);
-
+        itemView.setOnCreateContextMenuListener(this);
     }
 
     @Override
@@ -50,6 +52,12 @@ class CartViewHolder extends RecyclerView.ViewHolder implements View.OnClickList
 
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        menu.setHeaderTitle(Common.DELETE);
+
+        menu.add(0,0,getAdapterPosition(),Common.DELETE);
+    }
 }
 
 public class CartAdapter extends RecyclerView.Adapter<CartViewHolder>{

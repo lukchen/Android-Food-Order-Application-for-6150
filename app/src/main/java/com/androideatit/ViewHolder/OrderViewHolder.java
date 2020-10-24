@@ -11,7 +11,7 @@ import com.androideatit.R;
  * Created by 123456 on 2017/11/20.
  */
 
-public class OrderViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+public class OrderViewHolder extends RecyclerView.ViewHolder{
 
     public TextView txtOrderId, txtOrderStatus, txtOrderphone, txtOrderAddress;
 
@@ -25,17 +25,9 @@ public class OrderViewHolder extends RecyclerView.ViewHolder implements View.OnC
         txtOrderStatus = itemView.findViewById(R.id.order_status);
         txtOrderphone = itemView.findViewById(R.id.order_address);
 
-        itemView.setOnClickListener(this);
-
     }
 
     public void setItemClickListener(ItemClickListener itemClickListener){
         this.itemClickListener = itemClickListener;
-    }
-
-    @Override
-    public void onClick(View v) {
-        itemClickListener.onClick(v, getAdapterPosition(),false);
-
     }
 }
